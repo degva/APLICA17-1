@@ -119,6 +119,88 @@ def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     return graphSearch(problem, FIFOQueue())
 
+def invertMeme(memelist):
+    """ This is a hardcoded meme """
+    from game import Directions
+    s = Directions.SOUTH
+    w = Directions.WEST
+    e = Directions.EAST
+    n = Directions.NORTH
+
+    rmeme = []
+    for i in memelist:
+        if i == s:
+            rmeme.append(n)
+        elif i == w:
+            rmeme.append(e)
+        elif i == e:    
+            rmeme.append(w)
+        elif i == n:
+            rmeme.append(s)
+    return rmeme    
+
+
+def biSearch(problem, QI, QG):
+    initial = problem.getStartState()
+    goal = problem.goal
+    
+    explored1 = []
+    explored2 = []
+
+    frontier1 = QI
+    frontier2 = QG
+    frontier1.append((initial,[]))
+    frontier2.append((goal,[]))
+    if(initial == goal):
+            return []
+
+    while True:
+        node1,dir1 = frontier1.pop()
+        explored1.append(node1)
+        if (node1 in frontier2):
+            for node, dir2 in frontier2:
+                if (node1 == node):
+                    ans = invertMeme(dir2)
+                    ans.reverse()
+                    return dir1 + ans
+            
+        successors = problem.getSuccessors(node1)
+        for succ in successors:
+            coordinate, direction, cost = succ
+            newActions = dir1 + [direction]
+            res_list = [x for x,_ in frontier1]
+            if(coordinate not in frontier1) and (coordinate not in explored1):
+                frontier1.append((coordinate,newActions))
+        
+        node2,dir2 = frontier2.pop()
+        explored2.append(node2)
+        if (node2 in frontier1):
+            for node, dir1 in frontier1:
+                if (node2 == node):
+                    ans = invertMeme(dir2)
+                    ans.reverse()
+                    return  dir1 + ans
+
+
+        successors = problem.getSuccessors(node2)
+        for succ in successors:
+            coordinate, direction, cost = succ
+            newActions = dir2 + [direction]
+            res_list = [x for x,_ in frontier2]
+            if(coordinate not in frontier2) and (coordinate not in explored2):
+                frontier2.append((coordinate,newActions))
+
+        for cord1, dir1 in frontier1:
+            for cord2, dir2 in frontier2:
+                if(cord1 == cord2):
+                    ans = invertMeme(dir2)
+                    ans.reverse()
+                    return  dir1 + ans
+
+def bidirectionalSearch(problem):
+    return biSearch(problem, FIFOQueue(), FIFOQueue())
+
+
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
@@ -133,8 +215,26 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    closedset = []
+    frontier = util.PriorityQueue()
+    start = problem.getStartState()
+    frontier.push( (start, []), heuristic(start, problem))
+
+    while not frontier.isEmpty():
+        node, actions = frontier.pop()
+
+        if problem.isGoalState(node):
+            return actions
+
+        closedset.append(node)
+
+        for coord, direction, cost in problem.getSuccessors(node):
+            if not coord in closedset:
+                new_actions = actions + [direction]
+                score = problem.getCostOfActions(new_actions) + heuristic(coord, problem)
+                frontier.push( (coord, new_actions), score )
+
+    return []
 
 
 # Abbreviations
@@ -142,3 +242,4 @@ bfs = breadthFirstSearch
 dfs = depthFirstSearch
 astar = aStarSearch
 ucs = uniformCostSearch
+bir = bidirectionalSearch
