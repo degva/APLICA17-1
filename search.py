@@ -238,6 +238,7 @@ def aStarSearch(problem, heuristic=manhattanHeuristic):
             if not coord in closedset:
                 new_actions = actions + [direction]
                 score = problem.getCostOfActions(new_actions) + heuristic(coord, problem)
+                #print problem.getCostOfActions(new_actions), heuristic(coord, problem)
                 frontier.push( (coord, new_actions), score )
 
     return []
